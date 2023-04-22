@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -7,6 +5,7 @@ pub struct AnchorInfo {
     pub name: String,
     pub platform: Option<Platform>,
     pub room_id: String,
+    #[serde(skip)]
     pub show_type: Option<ShowType>,
 }
 
@@ -34,9 +33,17 @@ impl Platform {
     pub fn as_seam_arg(&self) -> &'static str {
         match self {
             Platform::BiliBili => "bili",
-            Platform::DouYu => todo!(),
-            Platform::DouYin => todo!(),
-            Platform::HuYa => todo!(),
+            Platform::DouYu => "douyu",
+            Platform::DouYin => "douyin",
+            Platform::HuYa => "huya",
+        }
+    }
+    pub fn as_ui_text(&self) -> &'static str {
+        match self {
+            Platform::BiliBili => "b站",
+            Platform::DouYu => "斗鱼",
+            Platform::DouYin => "抖音",
+            Platform::HuYa => "虎牙",
         }
     }
 }
@@ -54,7 +61,7 @@ pub enum ShowType {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SeamInfo {
     #[serde(default)]
-    title: String,
+    pub title: String,
     pub nodes: Option<Vec<Node>>,
 }
 

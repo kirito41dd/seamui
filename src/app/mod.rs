@@ -1,5 +1,6 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, ops::IndexMut};
 
+use log::{debug, info};
 use tokio::sync::mpsc;
 
 use iced::{
@@ -7,29 +8,29 @@ use iced::{
     Application, Command, Length, Renderer, Subscription,
 };
 
-use strum::IntoEnumIterator;
-
-use crate::{
-    app::uitl::PlayState,
-    model::{self, AnchorInfo},
-};
+use crate::app::uitl::PlayState;
 
 use self::{
-    anchor_input::AnchorInput, anchor_item::AnchorItem, server::SeamServer, uitl::SavedState,
+    anchor_input::{AnchorInput, AnchorInputState},
+    anchor_item::{AnchorItem, AnchorItemUpdateType},
+    model::*,
+    server::SeamServer,
+    uitl::{AppConfig, SavedState},
 };
 
 mod anchor_input;
 mod anchor_item;
+mod model;
 mod server;
 mod uitl;
 
 pub struct SeamUI {
     loaded: bool,
     anchor_list: Vec<AnchorInfo>,
-    anchor_input: AnchorInput<Message>,
-    sub: bool,
+    anchor_input_state: RefCell<AnchorInputState>,
     task_sender: mpsc::UnboundedSender<AnchorInfo>,
     result_receiver: RefCell<Option<mpsc::UnboundedReceiver<AnchorInfo>>>,
+    config: AppConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -38,7 +39,8 @@ pub enum Message {
     Saved,
     SubmitAnchor(AnchorInfo),
     OnPlay(usize, model::Node),
-    Subs,
+    OnItemUpdate(usize, AnchorItemUpdateType),
+    OnFlush,
     TaskResult(AnchorInfo),
     Ignore,
 }
@@ -63,14 +65,14 @@ impl Application for SeamUI {
         (
             SeamUI {
                 loaded: false,
-                anchor_input: AnchorInput::new(),
+                anchor_input_state: RefCell::new(AnchorInputState::default()),
                 anchor_list: vec![],
-                sub: false,
-                task_sender: task_sender,
+                task_sender,
                 result_receiver: RefCell::new(Some(result_receiver)),
+                config: AppConfig::default(),
             },
             Command::perform(SavedState::load(), |r| {
-                println!("load is ok {:?}", r.is_ok());
+                info!("load is ok {:?}", r.is_ok());
                 Message::Loaded(r.expect("load"))
             }),
         )
@@ -83,26 +85,28 @@ impl Application for SeamUI {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             Message::Loaded(s) => {
-                println!("load anchors len={}", s.anchors.len());
+                info!("load anchors len={}, cfg:{:?}", s.anchors.len(), s.config);
                 self.anchor_list = s.anchors;
+                self.config = s.config;
                 self.loaded = true;
-                self.task_sender
-                    .send(self.anchor_list[0].clone())
-                    .expect("send err");
+                self.anchor_list.iter().for_each(|v| {
+                    self.task_sender.send(v.clone()).expect("send err");
+                });
+
                 Command::none()
             }
 
             Message::SubmitAnchor(anchor) => {
-                println!("{:?}, path {:?}", anchor, SavedState::path());
-                self.anchor_list.push(anchor);
-
+                self.anchor_list.push(anchor.clone());
+                self.task_sender.send(anchor).expect("send err");
                 let save = Command::perform(
                     SavedState {
                         anchors: self.anchor_list.clone(),
+                        config: self.config.clone(),
                     }
                     .save(),
                     |v| {
-                        println!("saved? {:?}", v);
+                        info!("saved {:?}", v);
                         Message::Saved
                     },
                 );
@@ -110,31 +114,53 @@ impl Application for SeamUI {
             }
 
             Message::OnPlay(i, node) => {
-                println!("{} {:?}", i, node);
-                Command::perform(PlayState::play(node), move |v| {
-                    println!("play {} {:?}", i, v);
+                info!("play idx:{} {:?}", i, node);
+                Command::perform(PlayState::play(node, self.config.clone()), move |v| {
+                    info!("play idx:{} {:?}", i, v);
                     Message::Ignore
                 })
             }
-            Message::Subs => {
-                println!("get subs");
-                self.sub = true;
-                Command::none()
+            Message::OnItemUpdate(i, typ) => {
+                debug!("OnItemUpdate {} {:?}", i, typ);
+                match typ {
+                    AnchorItemUpdateType::Del => {
+                        self.anchor_list.remove(i);
+                    }
+                    AnchorItemUpdateType::Update(n) => {
+                        *self.anchor_list.index_mut(i) = n;
+                    }
+                }
+                Command::perform(
+                    SavedState {
+                        anchors: self.anchor_list.clone(),
+                        config: self.config.clone(),
+                    }
+                    .save(),
+                    |v| {
+                        info!("saved {:?}", v);
+                        Message::Saved
+                    },
+                )
             }
 
             Message::TaskResult(info) => {
-                println!("recv task {:?}", info);
                 self.anchor_list
                     .iter_mut()
                     .filter(|m| {
                         if m.platform == info.platform && m.room_id == info.room_id {
                             return true;
                         }
-                        return false;
+                        false
                     })
                     .for_each(|v| {
                         v.show_type = info.show_type.clone();
                     });
+                Command::none()
+            }
+            Message::OnFlush => {
+                self.anchor_list.iter().for_each(|v| {
+                    self.task_sender.send(v.clone()).expect("send err");
+                });
                 Command::none()
             }
             _ => Command::none(),
@@ -142,20 +168,24 @@ impl Application for SeamUI {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
-        let anchor_input = AnchorInput::new().on_submit(Message::SubmitAnchor);
+        let anchor_input = AnchorInput::new(self.anchor_input_state.borrow_mut())
+            .on_submit(Message::SubmitAnchor)
+            .on_flush(|| Message::OnFlush);
 
         let es: Vec<AnchorItem<Message>> = self
             .anchor_list
             .iter()
             .enumerate()
             .map(|(i, item)| -> AnchorItem<Message> {
-                AnchorItem::new(item).on_play(move |v| Message::OnPlay(i, v))
+                AnchorItem::new(item)
+                    .on_play(move |v| Message::OnPlay(i, v))
+                    .on_update(move |v| Message::OnItemUpdate(i, v))
             })
             .collect();
         let es: Vec<iced_native::Element<Message, Renderer>> =
             es.into_iter().map(|e| e.into()).collect();
 
-        let c = column(es).spacing(10);
+        let c = column(es).spacing(15);
 
         let content = iced_native::column!(
             anchor_input,
@@ -168,7 +198,6 @@ impl Application for SeamUI {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        println!("subscription");
         let server = iced::subscription::unfold(
             "seam server",
             self.result_receiver.take(),
@@ -178,6 +207,6 @@ impl Application for SeamUI {
             },
         );
 
-        return Subscription::batch([server]);
+        Subscription::batch([server])
     }
 }
