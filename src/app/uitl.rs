@@ -1,13 +1,31 @@
-use std::{path::PathBuf};
+use std::path::PathBuf;
 
+use iced::Font;
 use serde::{Deserialize, Serialize};
 use tokio::process;
 
-use crate::model::{self, AnchorInfo};
+use super::model::{self, AnchorInfo};
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct AppConfig {
+    pub seam_path: String,
+    pub player_path: String,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        AppConfig {
+            seam_path: "seam".into(),
+            player_path: "mpv".into(),
+        }
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct SavedState {
     pub anchors: Vec<AnchorInfo>,
+    #[serde(default)]
+    pub config: AppConfig,
 }
 
 impl SavedState {
@@ -26,7 +44,7 @@ impl SavedState {
         let s: Self = match serde_json::from_slice(&data) {
             Ok(v) => v,
             Err(e) => {
-                println!("err {}", e);
+                log::error!("err {}", e);
                 Self::default()
             }
         };
@@ -48,8 +66,17 @@ impl SavedState {
 pub struct PlayState {}
 
 impl PlayState {
-    pub async fn play(node: model::Node) -> anyhow::Result<()> {
-        let _output = process::Command::new("mpv").arg(node.url).output().await?;
+    pub async fn play(node: model::Node, cfg: AppConfig) -> anyhow::Result<()> {
+        let _output = process::Command::new(cfg.player_path)
+            .arg(node.url)
+            .output()
+            .await?;
         Ok(())
     }
 }
+
+// Font Awesome 6 Free-Regular-400.otf
+pub const AWESOME: Font = Font::External {
+    name: "Awesome",
+    bytes: include_bytes!("../../static/fa-solid-900.ttf"),
+};

@@ -1,8 +1,9 @@
 use iced::{window, Application, Settings};
 
 mod app;
-mod model;
+
 fn main() -> iced::Result {
+    env_logger::init();
     app::SeamUI::run(Settings {
         window: window::Settings {
             size: (500, 800),

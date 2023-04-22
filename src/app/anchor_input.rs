@@ -1,21 +1,30 @@
-
+use std::{borrow::Borrow, cell::RefMut};
 
 use iced::{
-    overlay,
-    widget::{self, pick_list, row, text_input},
-    Element,
+    overlay, theme,
+    widget::{self, button, pick_list, row, text, text_input},
+    Element, Font,
 };
+
 use iced_lazy::Component;
 
 use strum::IntoEnumIterator;
 
-use crate::model::{self, AnchorInfo};
+use super::model::*;
 
-pub struct AnchorInput<Message> {
+use super::uitl::AWESOME;
+
+pub struct AnchorInput<'a, Message> {
+    state: RefMut<'a, AnchorInputState>,
+    on_submit: Option<Box<dyn Fn(AnchorInfo) -> Message>>,
+    on_flush: Option<Box<dyn Fn() -> Message>>,
+}
+
+#[derive(Default)]
+pub struct AnchorInputState {
     pick_list_item: Vec<String>,
     pick_list_selected: String,
     input: String,
-    on_submit: Option<Box<dyn Fn(AnchorInfo) -> Message>>,
 }
 
 #[derive(Debug, Clone)]
@@ -23,19 +32,24 @@ pub enum AnchorInputMessage {
     Selected(String),
     OnInput(String),
     OnSubmit,
+    OnFlush,
 }
 
-impl<Message> AnchorInput<Message> {
-    pub fn new() -> Self {
-        let plat = model::Platform::iter()
+impl<'a, Message> AnchorInput<'a, Message> {
+    pub fn new(mut selected: RefMut<'a, AnchorInputState>) -> Self {
+        let plat = Platform::iter()
             .map(|e| format!("{:?}", e))
             .collect::<Vec<_>>();
-        let selected = plat[0].clone();
+
+        if selected.borrow().pick_list_selected.is_empty() {
+            selected.pick_list_selected = plat[0].clone();
+            selected.pick_list_item = plat;
+        }
+
         Self {
-            pick_list_item: plat,
-            pick_list_selected: selected,
-            input: String::new(),
+            state: selected,
             on_submit: None,
+            on_flush: None,
         }
     }
 
@@ -43,18 +57,26 @@ impl<Message> AnchorInput<Message> {
         self.on_submit = Some(Box::new(f));
         self
     }
+    pub fn on_flush<F: 'static + Fn() -> Message>(mut self, f: F) -> Self {
+        self.on_flush = Some(Box::new(f));
+        self
+    }
 }
 
-impl<Message, Renderer> Component<Message, Renderer> for AnchorInput<Message>
+impl<'a, Message, Renderer> Component<Message, Renderer> for AnchorInput<'a, Message>
 where
     Renderer: iced_native::text::Renderer + 'static,
     Renderer::Theme: widget::pick_list::StyleSheet
         + widget::scrollable::StyleSheet
         + overlay::menu::StyleSheet
         + widget::container::StyleSheet
-        + widget::text_input::StyleSheet,
+        + widget::text_input::StyleSheet
+        + iced::widget::button::StyleSheet
+        + iced::widget::text::StyleSheet,
     <Renderer::Theme as overlay::menu::StyleSheet>::Style:
         From<<Renderer::Theme as widget::pick_list::StyleSheet>::Style>,
+    <Renderer::Theme as widget::button::StyleSheet>::Style: From<theme::Button>,
+    <Renderer as iced_native::text::Renderer>::Font: From<Font>,
 {
     type State = ();
 
@@ -63,31 +85,37 @@ where
     fn update(&mut self, _state: &mut Self::State, event: Self::Event) -> Option<Message> {
         let r = match event {
             AnchorInputMessage::Selected(s) => {
-                self.pick_list_selected = s;
+                self.state.pick_list_selected = s;
                 None
             }
             AnchorInputMessage::OnInput(s) => {
-                self.input = s;
+                self.state.input = s;
                 None
             }
             AnchorInputMessage::OnSubmit => {
-                println!("{}", self.input);
-                if self.input.is_empty() {
+                log::info!("submit {}", self.state.input);
+                if self.state.input.is_empty() {
                     return None;
                 }
                 let r = if let Some(cb) = &self.on_submit {
                     Some(cb(AnchorInfo {
-                        name: self.input.clone(),
-                        platform: Some(self.pick_list_selected.as_str().into()),
-                        room_id: self.input.clone(),
+                        name: self.state.input.clone(),
+                        platform: Some(self.state.pick_list_selected.as_str().into()),
+                        room_id: self.state.input.clone(),
                         show_type: None,
                     }))
                 } else {
                     None
                 };
 
-                self.input.clear();
+                self.state.input.clear();
                 r
+            }
+            AnchorInputMessage::OnFlush => {
+                if let Some(cb) = &self.on_flush {
+                    return Some(cb());
+                }
+                None
             }
         };
 
@@ -96,20 +124,25 @@ where
 
     fn view(&self, _state: &Self::State) -> Element<'_, Self::Event, Renderer> {
         let pick = pick_list(
-            &self.pick_list_item,
-            Some(self.pick_list_selected.clone()),
+            &self.state.pick_list_item,
+            Some(self.state.pick_list_selected.to_string()),
             AnchorInputMessage::Selected,
         );
 
-        let input = text_input("room id", &self.input)
+        let input = text_input("room id", &self.state.input)
             .on_input(AnchorInputMessage::OnInput)
             .on_submit(AnchorInputMessage::OnSubmit);
 
-        row!(pick, input).spacing(15).into()
+        let flush = button(text("\u{f2f9}").font(AWESOME))
+            .style(theme::Button::Secondary.into())
+            .on_press(AnchorInputMessage::OnFlush);
+
+        row!(pick, input, flush).spacing(15).into()
     }
 }
 
-impl<'a, Message, Renderer> From<AnchorInput<Message>> for Element<'a, Message, Renderer>
+impl<'a, 'b: 'a, Message, Renderer> From<AnchorInput<'b, Message>>
+    for Element<'a, Message, Renderer>
 where
     Message: 'a,
     Renderer: iced_native::text::Renderer + 'static,
@@ -117,11 +150,15 @@ where
         + widget::scrollable::StyleSheet
         + overlay::menu::StyleSheet
         + widget::container::StyleSheet
-        + widget::text_input::StyleSheet,
+        + widget::text_input::StyleSheet
+        + iced::widget::button::StyleSheet
+        + iced::widget::text::StyleSheet,
     <Renderer::Theme as overlay::menu::StyleSheet>::Style:
         From<<Renderer::Theme as widget::pick_list::StyleSheet>::Style>,
+    <Renderer::Theme as widget::button::StyleSheet>::Style: From<theme::Button>,
+    <Renderer as iced_native::text::Renderer>::Font: From<Font>,
 {
-    fn from(numeric_input: AnchorInput<Message>) -> Self {
+    fn from(numeric_input: AnchorInput<'b, Message>) -> Self {
         iced_lazy::component(numeric_input)
     }
 }
