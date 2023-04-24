@@ -5,7 +5,7 @@
 目前实现了粗糙的原型，可用状态
 
 ## 截图
-![](static/ui.jpg)
+![](static/ui.png)
 
 ## 使用
 
@@ -17,6 +17,7 @@
 
 配置文件所在目录：
 * win：`C:\Users\xxx\AppData\Roaming\seamui\data`
-* linux/mac：`~/.seamui`
+* linux：`~/.local/share/seamui`
+* mac：`~/Library/Application Support/seamui`
 
 需要日志打印增加环境变量即可: `RUST_LOG=seamui=info seamui.exe`

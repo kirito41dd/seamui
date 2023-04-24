@@ -78,5 +78,5 @@ impl PlayState {
 // Font Awesome 6 Free-Regular-400.otf
 pub const AWESOME: Font = Font::External {
     name: "Awesome",
-    bytes: include_bytes!("../../static/fa-solid-900.ttf"),
+    bytes: include_bytes!("../../static/fonts/fa-solid-900.ttf"),
 };

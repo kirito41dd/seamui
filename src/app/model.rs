@@ -15,6 +15,11 @@ pub enum Platform {
     DouYu,
     DouYin,
     HuYa,
+    KuaiShou,
+    CC,
+    HuaJiao,
+    Now,
+    Afreeca,
 }
 
 impl From<&str> for Platform {
@@ -24,6 +29,11 @@ impl From<&str> for Platform {
             "DouYu" => Self::DouYu,
             "DouYin" => Self::DouYin,
             "HuYa" => Self::HuYa,
+            "KuaiShou" => Self::KuaiShou,
+            "CC" => Self::CC,
+            "HuaJiao" => Self::HuaJiao,
+            "Now" => Self::Now,
+            "Afreeca" => Self::Afreeca,
             _ => Self::BiliBili,
         }
     }
@@ -36,14 +46,24 @@ impl Platform {
             Platform::DouYu => "douyu",
             Platform::DouYin => "douyin",
             Platform::HuYa => "huya",
+            Platform::KuaiShou => "kuaishou",
+            Platform::CC => "cc",
+            Platform::HuaJiao => "huajiao",
+            Platform::Now => "now",
+            Platform::Afreeca => "afreeca",
         }
     }
     pub fn as_ui_text(&self) -> &'static str {
         match self {
-            Platform::BiliBili => "b站",
+            Platform::BiliBili => "B站",
             Platform::DouYu => "斗鱼",
             Platform::DouYin => "抖音",
             Platform::HuYa => "虎牙",
+            Platform::KuaiShou => "快手",
+            Platform::CC => "CC",
+            Platform::HuaJiao => "花椒",
+            Platform::Now => "Now",
+            Platform::Afreeca => "Afreeca",
         }
     }
 }

@@ -1,9 +1,9 @@
 use std::{borrow::Borrow, cell::RefMut};
 
 use iced::{
-    overlay, theme,
-    widget::{self, button, pick_list, row, text, text_input},
-    Element, Font,
+    theme,
+    widget::{button, pick_list, row, text, text_input},
+    Element, Length,
 };
 
 use iced_lazy::Component;
@@ -63,20 +63,7 @@ impl<'a, Message> AnchorInput<'a, Message> {
     }
 }
 
-impl<'a, Message, Renderer> Component<Message, Renderer> for AnchorInput<'a, Message>
-where
-    Renderer: iced_native::text::Renderer + 'static,
-    Renderer::Theme: widget::pick_list::StyleSheet
-        + widget::scrollable::StyleSheet
-        + overlay::menu::StyleSheet
-        + widget::container::StyleSheet
-        + widget::text_input::StyleSheet
-        + iced::widget::button::StyleSheet
-        + iced::widget::text::StyleSheet,
-    <Renderer::Theme as overlay::menu::StyleSheet>::Style:
-        From<<Renderer::Theme as widget::pick_list::StyleSheet>::Style>,
-    <Renderer::Theme as widget::button::StyleSheet>::Style: From<theme::Button>,
-    <Renderer as iced_native::text::Renderer>::Font: From<Font>,
+impl<'a, Message> Component<Message, iced::Renderer> for AnchorInput<'a, Message>
 {
     type State = ();
 
@@ -122,7 +109,7 @@ where
         r
     }
 
-    fn view(&self, _state: &Self::State) -> Element<'_, Self::Event, Renderer> {
+    fn view(&self, _state: &Self::State) -> Element<'_, Self::Event, iced::Renderer> {
         let pick = pick_list(
             &self.state.pick_list_item,
             Some(self.state.pick_list_selected.to_string()),
@@ -133,30 +120,18 @@ where
             .on_input(AnchorInputMessage::OnInput)
             .on_submit(AnchorInputMessage::OnSubmit);
 
-        let flush = button(text("\u{f2f9}").font(AWESOME))
+        let flush = button(text("\u{f021}").font(AWESOME))
             .style(theme::Button::Secondary.into())
             .on_press(AnchorInputMessage::OnFlush);
 
-        row!(pick, input, flush).spacing(15).into()
+        row!(pick, input.width(Length::Fill), flush).spacing(10).align_items(iced::Alignment::Center).into()
     }
 }
 
-impl<'a, 'b: 'a, Message, Renderer> From<AnchorInput<'b, Message>>
-    for Element<'a, Message, Renderer>
+impl<'a, 'b: 'a, Message> From<AnchorInput<'b, Message>>
+    for Element<'a, Message, iced::Renderer>
 where
     Message: 'a,
-    Renderer: iced_native::text::Renderer + 'static,
-    Renderer::Theme: widget::pick_list::StyleSheet
-        + widget::scrollable::StyleSheet
-        + overlay::menu::StyleSheet
-        + widget::container::StyleSheet
-        + widget::text_input::StyleSheet
-        + iced::widget::button::StyleSheet
-        + iced::widget::text::StyleSheet,
-    <Renderer::Theme as overlay::menu::StyleSheet>::Style:
-        From<<Renderer::Theme as widget::pick_list::StyleSheet>::Style>,
-    <Renderer::Theme as widget::button::StyleSheet>::Style: From<theme::Button>,
-    <Renderer as iced_native::text::Renderer>::Font: From<Font>,
 {
     fn from(numeric_input: AnchorInput<'b, Message>) -> Self {
         iced_lazy::component(numeric_input)

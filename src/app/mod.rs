@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 
 use iced::{
     widget::{column, container, scrollable},
-    Application, Command, Length, Renderer, Subscription,
+    Application, Command, Length, Renderer, Subscription, alignment::{Horizontal, Vertical},
 };
 
 use crate::app::uitl::PlayState;
@@ -185,16 +185,17 @@ impl Application for SeamUI {
         let es: Vec<iced_native::Element<Message, Renderer>> =
             es.into_iter().map(|e| e.into()).collect();
 
-        let c = column(es).spacing(15);
+        let c = column(es).align_items(iced::Alignment::Start).spacing(15);
 
         let content = iced_native::column!(
             anchor_input,
-            scrollable(container(c).width(Length::Fill).center_x())
-        )
-        .padding(20)
+            scrollable(container(c).width(Length::Fill).padding([0,6,0,6]))
+        ).align_items(iced::Alignment::Center)
+        .padding(10)
         .spacing(20);
 
-        content.into()
+        container(content).align_x(Horizontal::Center)
+        .align_y(Vertical::Top).into()
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
