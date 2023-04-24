@@ -10,7 +10,7 @@ fn main() -> iced::Result {
 
             ..window::Settings::default()
         },
-        default_font: Some(include_bytes!("../static/SIMHEI.TTF")),
+        default_font: Some(include_bytes!("../static/fonts/SIMHEI.TTF")),
         antialiasing: true,
         ..Settings::default()
     })

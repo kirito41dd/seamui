@@ -1,7 +1,7 @@
 use iced::{
     theme,
-    widget::{self, button, row, text, text_input},
-    Element, Font, Length,
+    widget::{button, row, text, text_input},
+    Element, Length,
 };
 use iced_lazy::Component;
 use iced_native::column;
@@ -54,13 +54,7 @@ impl<'a, Message> AnchorItem<'a, Message> {
         self
     }
 }
-impl<'a, Message, Renderer> Component<Message, Renderer> for AnchorItem<'a, Message>
-where
-    Renderer: iced_native::text::Renderer + 'static,
-    Renderer::Theme:
-        widget::text::StyleSheet + widget::button::StyleSheet + widget::text_input::StyleSheet,
-    <Renderer as iced_native::text::Renderer>::Font: From<Font>,
-    <Renderer::Theme as widget::button::StyleSheet>::Style: From<theme::Button>,
+impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message>
 {
     type State = ();
 
@@ -113,7 +107,7 @@ where
         }
     }
 
-    fn view(&self, _state: &Self::State) -> iced_native::Element<'_, Self::Event, Renderer> {
+    fn view(&self, _state: &Self::State) -> iced_native::Element<'_, Self::Event, iced::Renderer> {
         if !self.show_edit {
             let name = format!(
                 "{}:{}",
@@ -128,52 +122,41 @@ where
             let status = if let Some(ShowType::On(s)) = &self.info.show_type {
                 play = play.on_press(AnchorItemMessage::OnPlay);
                 title = text(&s.title);
-                text("直播中")
+                text("直播中:")
             } else {
                 text("未开播")
             };
 
-            let edit = button(text('\u{f044}').font(AWESOME))
-                .padding([0, 0, 0, 10])
-                .style(theme::Button::Text.into())
+            let edit = button(text('\u{f304}').font(AWESOME).size(17))
+                .style(theme::Button::Text)
                 .on_press(AnchorItemMessage::OnEdit);
 
-            row!(
-                column!(row!(room, status), row!(title))
-                    .spacing(3)
-                    .width(Length::Fill),
-                row!(play, edit).padding([0, 20, 0, 0])
-            )
-            .spacing(10)
-            .into()
+                column!(
+                    row!(room,row!().width(Length::Fill),play, edit).spacing(5).align_items(iced::Alignment::Center), 
+                    row!(status,title).spacing(5).align_items(iced::Alignment::Center)
+                )
+                .spacing(3).align_items(iced::Alignment::Start).into()
         } else {
             let edit_name = text_input("", &self.name_editor)
                 .on_input(AnchorItemMessage::OnEditInput)
                 .on_submit(AnchorItemMessage::OnEditSubmit);
-            let del = button(text("\u{F1F8}").font(AWESOME))
+            let del = button(text("\u{f1f8}").font(AWESOME))
                 .style(theme::Button::Destructive.into())
                 .on_press(AnchorItemMessage::OnDel);
             let close = button(text("\u{f00d}").font(AWESOME))
-                .style(theme::Button::Secondary.into())
+                .style(theme::Button::Text.into())
                 .on_press(AnchorItemMessage::CloseEdit);
-            row!(
-                column!(row!(text("name:"), edit_name).spacing(10)).width(Length::Fill),
-                row!(del, close).spacing(10).padding([0, 20, 0, 0])
-            )
-            .spacing(10)
+
+            row!(text("名称:"), edit_name.width(Length::Fill),del, close)
+            .spacing(5).align_items(iced::Alignment::Center)
             .into()
         }
     }
 }
 
-impl<'a, 'b: 'a, Message, Renderer> From<AnchorItem<'b, Message>> for Element<'a, Message, Renderer>
+impl<'a, 'b: 'a, Message> From<AnchorItem<'b, Message>> for Element<'a, Message, iced::Renderer>
 where
     Message: 'a,
-    Renderer: iced_native::text::Renderer + 'static,
-    Renderer::Theme:
-        widget::text::StyleSheet + widget::button::StyleSheet + widget::text_input::StyleSheet,
-    <Renderer as iced_native::text::Renderer>::Font: From<Font>,
-    <Renderer::Theme as widget::button::StyleSheet>::Style: From<theme::Button>,
 {
     fn from(numeric_input: AnchorItem<'b, Message>) -> Self {
         iced_lazy::component(numeric_input)
