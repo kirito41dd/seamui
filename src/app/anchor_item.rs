@@ -141,10 +141,10 @@ impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message>
                 .on_input(AnchorItemMessage::OnEditInput)
                 .on_submit(AnchorItemMessage::OnEditSubmit);
             let del = button(text("\u{f1f8}").font(AWESOME))
-                .style(theme::Button::Destructive.into())
+                .style(theme::Button::Destructive)
                 .on_press(AnchorItemMessage::OnDel);
             let close = button(text("\u{f00d}").font(AWESOME))
-                .style(theme::Button::Text.into())
+                .style(theme::Button::Text)
                 .on_press(AnchorItemMessage::CloseEdit);
 
             row!(text("名称:"), edit_name.width(Length::Fill),del, close)

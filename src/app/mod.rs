@@ -4,15 +4,14 @@ use log::{debug, info};
 use tokio::sync::mpsc;
 
 use iced::{
-    widget::{column, container, scrollable},
-    Application, Command, Length, Renderer, Subscription, alignment::{Horizontal, Vertical},
+    Application, Command, Subscription,
 };
 
 use crate::app::uitl::PlayState;
 
 use self::{
-    anchor_input::{AnchorInput, AnchorInputState},
-    anchor_item::{AnchorItem, AnchorItemUpdateType},
+    anchor_input::{AnchorInputState},
+    anchor_item::{AnchorItemUpdateType},
     model::*,
     server::SeamServer,
     uitl::{AppConfig, SavedState},
@@ -20,7 +19,9 @@ use self::{
 
 mod anchor_input;
 mod anchor_item;
+mod cfg_panel;
 mod model;
+mod pages;
 mod server;
 mod uitl;
 
@@ -28,9 +29,10 @@ pub struct SeamUI {
     loaded: bool,
     anchor_list: Vec<AnchorInfo>,
     anchor_input_state: RefCell<AnchorInputState>,
-    task_sender: mpsc::UnboundedSender<AnchorInfo>,
+    task_sender: mpsc::UnboundedSender<(AnchorInfo, AppConfig)>,
     result_receiver: RefCell<Option<mpsc::UnboundedReceiver<AnchorInfo>>>,
     config: AppConfig,
+    show_setting: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -41,6 +43,8 @@ pub enum Message {
     OnPlay(usize, model::Node),
     OnItemUpdate(usize, AnchorItemUpdateType),
     OnFlush,
+    OnSetting,
+    OnSettingUpdate(Option<AppConfig>),
     TaskResult(AnchorInfo),
     Ignore,
 }
@@ -56,7 +60,7 @@ impl Application for SeamUI {
 
     fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let (result_sender, result_receiver) = mpsc::unbounded_channel::<AnchorInfo>();
-        let (task_sender, task_receiver) = mpsc::unbounded_channel::<AnchorInfo>();
+        let (task_sender, task_receiver) = mpsc::unbounded_channel::<(AnchorInfo, AppConfig)>();
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async { SeamServer::new(result_sender, task_receiver).run().await })
@@ -70,6 +74,7 @@ impl Application for SeamUI {
                 task_sender,
                 result_receiver: RefCell::new(Some(result_receiver)),
                 config: AppConfig::default(),
+                show_setting: false,
             },
             Command::perform(SavedState::load(), |r| {
                 info!("load is ok {:?}", r.is_ok());
@@ -90,7 +95,9 @@ impl Application for SeamUI {
                 self.config = s.config;
                 self.loaded = true;
                 self.anchor_list.iter().for_each(|v| {
-                    self.task_sender.send(v.clone()).expect("send err");
+                    self.task_sender
+                        .send((v.clone(), self.config.clone()))
+                        .expect("send err");
                 });
 
                 Command::none()
@@ -98,7 +105,9 @@ impl Application for SeamUI {
 
             Message::SubmitAnchor(anchor) => {
                 self.anchor_list.push(anchor.clone());
-                self.task_sender.send(anchor).expect("send err");
+                self.task_sender
+                    .send((anchor, self.config.clone()))
+                    .expect("send err");
                 let save = Command::perform(
                     SavedState {
                         anchors: self.anchor_list.clone(),
@@ -114,7 +123,7 @@ impl Application for SeamUI {
             }
 
             Message::OnPlay(i, node) => {
-                info!("play idx:{} {:?}", i, node);
+                info!("play idx:{} {:?} {:?}", i, node, self.config);
                 Command::perform(PlayState::play(node, self.config.clone()), move |v| {
                     info!("play idx:{} {:?}", i, v);
                     Message::Ignore
@@ -137,7 +146,7 @@ impl Application for SeamUI {
                     }
                     .save(),
                     |v| {
-                        info!("saved {:?}", v);
+                        info!("saved due to OnItemUpdate: {:?}", v);
                         Message::Saved
                     },
                 )
@@ -159,8 +168,33 @@ impl Application for SeamUI {
             }
             Message::OnFlush => {
                 self.anchor_list.iter().for_each(|v| {
-                    self.task_sender.send(v.clone()).expect("send err");
+                    self.task_sender
+                        .send((v.clone(), self.config.clone()))
+                        .expect("send err");
                 });
+                Command::none()
+            }
+            Message::OnSetting => {
+                self.show_setting = true;
+                Command::none()
+            }
+            Message::OnSettingUpdate(s) => {
+                self.show_setting = false;
+                if let Some(setting) = s {
+                    self.config = setting;
+                    log::info!("update setting {:?}", self.config);
+                    return Command::perform(
+                        SavedState {
+                            anchors: self.anchor_list.clone(),
+                            config: self.config.clone(),
+                        }
+                        .save(),
+                        |v| {
+                            info!("saved due to OnSettingUpdate: {:?}", v);
+                            Message::Saved
+                        },
+                    );
+                }
                 Command::none()
             }
             _ => Command::none(),
@@ -168,34 +202,11 @@ impl Application for SeamUI {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
-        let anchor_input = AnchorInput::new(self.anchor_input_state.borrow_mut())
-            .on_submit(Message::SubmitAnchor)
-            .on_flush(|| Message::OnFlush);
-
-        let es: Vec<AnchorItem<Message>> = self
-            .anchor_list
-            .iter()
-            .enumerate()
-            .map(|(i, item)| -> AnchorItem<Message> {
-                AnchorItem::new(item)
-                    .on_play(move |v| Message::OnPlay(i, v))
-                    .on_update(move |v| Message::OnItemUpdate(i, v))
-            })
-            .collect();
-        let es: Vec<iced_native::Element<Message, Renderer>> =
-            es.into_iter().map(|e| e.into()).collect();
-
-        let c = column(es).align_items(iced::Alignment::Start).spacing(15);
-
-        let content = iced_native::column!(
-            anchor_input,
-            scrollable(container(c).width(Length::Fill).padding([0,6,0,6]))
-        ).align_items(iced::Alignment::Center)
-        .padding(10)
-        .spacing(20);
-
-        container(content).align_x(Horizontal::Center)
-        .align_y(Vertical::Top).into()
+        if self.show_setting {
+            self.setting_view()
+        } else {
+            self.main_page_view()
+        }
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {

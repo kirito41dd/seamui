@@ -18,6 +18,7 @@ pub struct AnchorInput<'a, Message> {
     state: RefMut<'a, AnchorInputState>,
     on_submit: Option<Box<dyn Fn(AnchorInfo) -> Message>>,
     on_flush: Option<Box<dyn Fn() -> Message>>,
+    on_setting: Option<Box<dyn Fn() -> Message>>,
 }
 
 #[derive(Default)]
@@ -33,6 +34,7 @@ pub enum AnchorInputMessage {
     OnInput(String),
     OnSubmit,
     OnFlush,
+    OnSetting,
 }
 
 impl<'a, Message> AnchorInput<'a, Message> {
@@ -50,6 +52,7 @@ impl<'a, Message> AnchorInput<'a, Message> {
             state: selected,
             on_submit: None,
             on_flush: None,
+            on_setting: None,
         }
     }
 
@@ -61,10 +64,13 @@ impl<'a, Message> AnchorInput<'a, Message> {
         self.on_flush = Some(Box::new(f));
         self
     }
+    pub fn on_setting<F: 'static + Fn() -> Message>(mut self, f: F) -> Self {
+        self.on_setting = Some(Box::new(f));
+        self
+    }
 }
 
-impl<'a, Message> Component<Message, iced::Renderer> for AnchorInput<'a, Message>
-{
+impl<'a, Message> Component<Message, iced::Renderer> for AnchorInput<'a, Message> {
     type State = ();
 
     type Event = AnchorInputMessage;
@@ -104,6 +110,12 @@ impl<'a, Message> Component<Message, iced::Renderer> for AnchorInput<'a, Message
                 }
                 None
             }
+            AnchorInputMessage::OnSetting => {
+                if let Some(cb) = &self.on_setting {
+                    return Some(cb());
+                }
+                None
+            }
         };
 
         r
@@ -121,15 +133,21 @@ impl<'a, Message> Component<Message, iced::Renderer> for AnchorInput<'a, Message
             .on_submit(AnchorInputMessage::OnSubmit);
 
         let flush = button(text("\u{f021}").font(AWESOME))
-            .style(theme::Button::Secondary.into())
+            .style(theme::Button::Secondary)
             .on_press(AnchorInputMessage::OnFlush);
 
-        row!(pick, input.width(Length::Fill), flush).spacing(10).align_items(iced::Alignment::Center).into()
+        let setting = button(text("\u{f013}").font(AWESOME))
+            .style(theme::Button::Secondary)
+            .on_press(AnchorInputMessage::OnSetting);
+
+        row!(pick, input.width(Length::Fill), flush, setting)
+            .spacing(10)
+            .align_items(iced::Alignment::Center)
+            .into()
     }
 }
 
-impl<'a, 'b: 'a, Message> From<AnchorInput<'b, Message>>
-    for Element<'a, Message, iced::Renderer>
+impl<'a, 'b: 'a, Message> From<AnchorInput<'b, Message>> for Element<'a, Message, iced::Renderer>
 where
     Message: 'a,
 {
