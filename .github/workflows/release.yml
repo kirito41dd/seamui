@@ -19,19 +19,3 @@ jobs:
         with:
           RUSTTARGET: ${{ matrix.target }}
           #EXTRA_FILES: "README.md LICENSE"
-  release-mac:
-    name: release ${{ matrix.target }}
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [aarch64-apple-darwin, x86_64-apple-darwin]
-    steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          RUSTTARGET: ${{ matrix.target }}
-          #EXTRA_FILES: "README.md LICENSE"
