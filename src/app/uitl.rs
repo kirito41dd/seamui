@@ -6,7 +6,7 @@ use tokio::process;
 
 use super::model::{self, AnchorInfo};
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct AppConfig {
     pub seam_path: String,
     pub player_path: String,

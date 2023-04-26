@@ -5,7 +5,10 @@
 目前实现了粗糙的原型，可用状态
 
 ## 截图
-![](static/ui.png)
+
+|||
+|-|-|
+|![](static/ui.jpg)|![](static/ui2.jpg)|
 
 ## 使用
 

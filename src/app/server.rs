@@ -4,17 +4,20 @@ use tokio::sync::{mpsc, Mutex, Semaphore};
 
 use crate::app::model::{self, ShowType};
 
-use super::model::{AnchorInfo, SeamInfo};
+use super::{
+    model::{AnchorInfo, SeamInfo},
+    uitl::AppConfig,
+};
 
 pub struct SeamServer {
     result_sender: Arc<Mutex<mpsc::UnboundedSender<AnchorInfo>>>,
-    task_receiver: mpsc::UnboundedReceiver<AnchorInfo>,
+    task_receiver: mpsc::UnboundedReceiver<(AnchorInfo, AppConfig)>,
 }
 
 impl SeamServer {
     pub fn new(
         result_sender: mpsc::UnboundedSender<AnchorInfo>,
-        task_receiver: mpsc::UnboundedReceiver<AnchorInfo>,
+        task_receiver: mpsc::UnboundedReceiver<(AnchorInfo, AppConfig)>,
     ) -> Self {
         SeamServer {
             result_sender: Arc::new(Mutex::new(result_sender)),
@@ -25,12 +28,12 @@ impl SeamServer {
     pub async fn run(mut self) {
         let semaphore = Arc::new(Semaphore::new(5));
         loop {
-            if let Some(mut info) = self.task_receiver.recv().await {
+            if let Some((mut info, cfg)) = self.task_receiver.recv().await {
                 let sender = self.result_sender.clone();
                 let guard = semaphore.clone().acquire_owned().await.unwrap();
                 tokio::spawn(async move {
                     let _g = guard;
-                    let output = tokio::process::Command::new("seam")
+                    let output = tokio::process::Command::new(cfg.seam_path)
                         .args([
                             info.platform.expect("platform").as_seam_arg(),
                             info.room_id.as_str(),
