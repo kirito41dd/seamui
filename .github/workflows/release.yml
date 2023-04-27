@@ -16,7 +16,7 @@ jobs:
         run: |
           set -x
           sudo apt-get update
-          sudo apt-get install -y fontconfig
+          sudo apt-get install -y libfontconfig libfontconfig1-dev
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.4.3
         env:
