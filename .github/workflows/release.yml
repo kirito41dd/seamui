@@ -15,6 +15,7 @@ jobs:
       - name: Install Denpendcies
         run: |
           set -x
+          sudo apt-get install -y aptitude
           sudo aptitude install -y libfontconfig1-dev libfontconfig
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.4.3
