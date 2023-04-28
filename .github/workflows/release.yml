@@ -16,7 +16,7 @@ jobs:
         run: |
           set -x
           sudo apt-get install -y libfontconfig1-dev libfontconfig
-          export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
+          sudo cp /usr/lib/x86_64-linux-gnu/pkgconfig/fontconfig.pc /usr/lib/pkgconfig/
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.4.3
         env:
