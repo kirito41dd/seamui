@@ -3,15 +3,13 @@ use std::{cell::RefCell, ops::IndexMut};
 use log::{debug, info};
 use tokio::sync::mpsc;
 
-use iced::{
-    Application, Command, Subscription,
-};
+use iced::{Application, Command, Subscription};
 
 use crate::app::uitl::PlayState;
 
 use self::{
-    anchor_input::{AnchorInputState},
-    anchor_item::{AnchorItemUpdateType},
+    anchor_input::AnchorInputState,
+    anchor_item::AnchorItemUpdateType,
     model::*,
     server::SeamServer,
     uitl::{AppConfig, SavedState},

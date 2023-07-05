@@ -1,3 +1,4 @@
+use seam_core::live::Live;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -64,6 +65,19 @@ impl Platform {
             Platform::HuaJiao => "花椒",
             Platform::Now => "Now",
             Platform::Afreeca => "Afreeca",
+        }
+    }
+    pub fn get_live(&self) -> Box<dyn Live + 'static + Send + Sync> {
+        match self {
+            Platform::BiliBili => Box::new(seam_core::live::bili::Client {}),
+            Platform::DouYu => Box::new(seam_core::live::douyu::Client {}),
+            Platform::DouYin => Box::new(seam_core::live::douyin::Client {}),
+            Platform::HuYa => Box::new(seam_core::live::huya::Client {}),
+            Platform::KuaiShou => Box::new(seam_core::live::ks::Client {}),
+            Platform::CC => Box::new(seam_core::live::cc::Client {}),
+            Platform::HuaJiao => Box::new(seam_core::live::huajiao::Client {}),
+            Platform::Now => Box::new(seam_core::live::now::Client {}),
+            Platform::Afreeca => Box::new(seam_core::live::afreeca::Client {}),
         }
     }
 }

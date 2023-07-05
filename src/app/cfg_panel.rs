@@ -17,7 +17,6 @@ pub struct CfgPanel<'a, Message> {
 pub enum CfgPanelMessage {
     OnSave,
     OnOff,
-    OnInputSeamPath(String),
     OninputPlayerPath(String),
     None,
 }
@@ -70,10 +69,6 @@ impl<'a, Message> Component<Message, iced::Renderer> for CfgPanel<'a, Message> {
                 }
                 None
             }
-            CfgPanelMessage::OnInputSeamPath(s) => {
-                state.cfg.seam_path = s;
-                None
-            }
             CfgPanelMessage::OninputPlayerPath(s) => {
                 state.cfg.player_path = s;
                 None
@@ -89,10 +84,6 @@ impl<'a, Message> Component<Message, iced::Renderer> for CfgPanel<'a, Message> {
             .horizontal_alignment(iced::alignment::Horizontal::Center)
             .width(Length::Fill)
             .size(40));
-
-        let seam_path = text("seam路径:");
-        let seam_path_input =
-            text_input("", &cfg.seam_path).on_input(CfgPanelMessage::OnInputSeamPath);
 
         let player_path = text("播放器路径:");
         let player_path_input =
@@ -126,8 +117,6 @@ impl<'a, Message> Component<Message, iced::Renderer> for CfgPanel<'a, Message> {
         .align_items(iced::Alignment::Center);
         iced_native::column!(
             title,
-            seam_path,
-            seam_path_input,
             player_path,
             player_path_input,
             config_path,

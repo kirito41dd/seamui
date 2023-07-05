@@ -8,14 +8,12 @@ use super::model::{self, AnchorInfo};
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct AppConfig {
-    pub seam_path: String,
     pub player_path: String,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         AppConfig {
-            seam_path: "seam".into(),
             player_path: "mpv".into(),
         }
     }

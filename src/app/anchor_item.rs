@@ -1,5 +1,3 @@
-
-
 use iced::{
     theme,
     widget::{button, row, text, text_input},
@@ -58,8 +56,7 @@ impl<'a, Message> AnchorItem<'a, Message> {
         self
     }
 }
-impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message>
-{
+impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message> {
     type State = AnchorItemState;
 
     type Event = AnchorItemMessage;
@@ -113,19 +110,19 @@ impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message>
             }
             AnchorItemMessage::None(_) => None,
             AnchorItemMessage::OnLiveLineSwitch(i) => {
-                if  let Some(ShowType::On(s)) = &self.info.show_type{
+                if let Some(ShowType::On(s)) = &self.info.show_type {
                     if let Some(n) = &s.nodes {
                         if !n.is_empty() {
                             if i > 0 {
-                                state.live_line = (state.live_line+1)%n.len();
+                                state.live_line = (state.live_line + 1) % n.len();
                             } else {
-                                state.live_line = (state.live_line+n.len()-1)%n.len();
+                                state.live_line = (state.live_line + n.len() - 1) % n.len();
                             }
                         }
                     }
                 }
                 None
-            },
+            }
         }
     }
 
@@ -153,11 +150,17 @@ impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message>
                 .style(theme::Button::Text)
                 .on_press(AnchorItemMessage::OnEdit);
 
-                column!(
-                    row!(room,row!().width(Length::Fill),play, edit).spacing(5).align_items(iced::Alignment::Center), 
-                    row!(status,title).spacing(5).align_items(iced::Alignment::Center)
-                )
-                .spacing(3).align_items(iced::Alignment::Start).into()
+            column!(
+                row!(room, row!().width(Length::Fill), play, edit)
+                    .spacing(5)
+                    .align_items(iced::Alignment::Center),
+                row!(status, title)
+                    .spacing(5)
+                    .align_items(iced::Alignment::Center)
+            )
+            .spacing(3)
+            .align_items(iced::Alignment::Start)
+            .into()
         } else {
             let edit_name = text_input("", &self.name_editor)
                 .on_input(AnchorItemMessage::OnEditInput)
@@ -168,37 +171,44 @@ impl<'a, Message> Component<Message, iced::Renderer> for AnchorItem<'a, Message>
             let close = button(text("\u{f00d}").font(AWESOME))
                 .style(theme::Button::Text)
                 .on_press(AnchorItemMessage::CloseEdit);
-            
-            
-            
 
-            let live_line_title = text(format!("线路{}:", state.live_line+1));
+            let live_line_title = text(format!("线路{}:", state.live_line + 1));
             let mut live_line_format = text("");
             let mut live_line_input = text_input("", "");
-            
+
             let live_line_switch_pre = button(text("\u{f053}").font(AWESOME))
-            .style(theme::Button::Text)
-            .on_press(AnchorItemMessage::OnLiveLineSwitch(-1));
+                .style(theme::Button::Text)
+                .on_press(AnchorItemMessage::OnLiveLineSwitch(-1));
             let live_line_switch_next = button(text("\u{f054}").font(AWESOME))
-            .style(theme::Button::Text)
-            .on_press(AnchorItemMessage::OnLiveLineSwitch(1));
+                .style(theme::Button::Text)
+                .on_press(AnchorItemMessage::OnLiveLineSwitch(1));
             if let Some(ShowType::On(s)) = &self.info.show_type {
                 if let Some(nodes) = &s.nodes {
                     if let Some(node) = nodes.get(state.live_line) {
-                        live_line_input = text_input("", &node.url).on_input(AnchorItemMessage::None);
+                        live_line_input =
+                            text_input("", &node.url).on_input(AnchorItemMessage::None);
                         live_line_format = text(&node.format);
                     }
                 }
             }
-            
 
             column!(
-            row!(text("名称:"), edit_name.width(Length::Fill),del, close)
-            .spacing(5).align_items(iced::Alignment::Center),
-            row!(live_line_title, live_line_input.width(Length::Fill),live_line_format,live_line_switch_pre,live_line_switch_next)
-            .spacing(5).align_items(iced::Alignment::Center)
+                row!(text("名称:"), edit_name.width(Length::Fill), del, close)
+                    .spacing(5)
+                    .align_items(iced::Alignment::Center),
+                row!(
+                    live_line_title,
+                    live_line_input.width(Length::Fill),
+                    live_line_format,
+                    live_line_switch_pre,
+                    live_line_switch_next
+                )
+                .spacing(5)
+                .align_items(iced::Alignment::Center)
             )
-            .spacing(3).align_items(iced::Alignment::Start).into()
+            .spacing(3)
+            .align_items(iced::Alignment::Start)
+            .into()
         }
     }
 }
@@ -212,7 +222,7 @@ where
     }
 }
 
-#[derive(Default,Clone,Debug)]
-pub struct AnchorItemState{
-    live_line: usize
+#[derive(Default, Clone, Debug)]
+pub struct AnchorItemState {
+    live_line: usize,
 }
