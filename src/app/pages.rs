@@ -4,13 +4,8 @@ use iced::{
     Length, Renderer,
 };
 
-
-
 use super::{
-    anchor_input::AnchorInput,
-    anchor_item::AnchorItem,
-    cfg_panel::{CfgPanel},
-    Message, SeamUI,
+    anchor_input::AnchorInput, anchor_item::AnchorItem, cfg_panel::CfgPanel, Message, SeamUI,
 };
 
 impl SeamUI {
