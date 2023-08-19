@@ -34,8 +34,7 @@ impl SeamServer {
             let guard = semaphore.clone().acquire_owned().await.unwrap();
             tokio::spawn(async move {
                 let _g = guard;
-                let cli = info.platform.unwrap().get_live();
-                let output = cli.get(&info.room_id).await;
+                let output = info.platform.unwrap().get_live(&info.room_id).await;
 
                 match output {
                     Ok(out) => {
