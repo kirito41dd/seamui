@@ -6,11 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-seam_core = { git="https://github.com/kirito41dd/seam", branch="your_good_GG"}
+seam_core = { git = "https://github.com/Borber/seam", branch = "master" }
 anyhow = "1.0.70"
 directories-next = "2.0.0"
 env_logger = "0.10.0"
-iced = { version = "0.9.0", features = ["default_system_font", "tokio", "debug"] }
+iced = { version = "0.9.0", features = [
+    "default_system_font",
+    "tokio",
+    "debug",
+] }
 iced_graphics = "0.8.0"
 iced_lazy = "0.6.1"
 iced_native = "0.10.1"

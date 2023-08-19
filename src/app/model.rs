@@ -67,17 +67,25 @@ impl Platform {
             Platform::Afreeca => "Afreeca",
         }
     }
-    pub fn get_live(&self) -> Box<dyn Live + 'static + Send + Sync> {
+    pub async fn get_live(&self, room_id: &str) -> seam_core::error::Result<seam_core::live::Node> {
         match self {
-            Platform::BiliBili => Box::new(seam_core::live::bili::Client {}),
-            Platform::DouYu => Box::new(seam_core::live::douyu::Client {}),
-            Platform::DouYin => Box::new(seam_core::live::douyin::Client {}),
-            Platform::HuYa => Box::new(seam_core::live::huya::Client {}),
-            Platform::KuaiShou => Box::new(seam_core::live::ks::Client {}),
-            Platform::CC => Box::new(seam_core::live::cc::Client {}),
-            Platform::HuaJiao => Box::new(seam_core::live::huajiao::Client {}),
-            Platform::Now => Box::new(seam_core::live::now::Client {}),
-            Platform::Afreeca => Box::new(seam_core::live::afreeca::Client {}),
+            Platform::BiliBili => seam_core::live::bili::Client {}.get(room_id, None).await,
+            Platform::DouYu => seam_core::live::douyu::Client {}.get(room_id, None).await,
+            Platform::DouYin => seam_core::live::douyin::Client {}.get(room_id, None).await,
+            Platform::HuYa => seam_core::live::huya::Client {}.get(room_id, None).await,
+            Platform::KuaiShou => seam_core::live::ks::Client {}.get(room_id, None).await,
+            Platform::CC => seam_core::live::cc::Client {}.get(room_id, None).await,
+            Platform::HuaJiao => {
+                seam_core::live::huajiao::Client {}
+                    .get(room_id, None)
+                    .await
+            }
+            Platform::Now => seam_core::live::now::Client {}.get(room_id, None).await,
+            Platform::Afreeca => {
+                seam_core::live::afreeca::Client {}
+                    .get(room_id, None)
+                    .await
+            }
         }
     }
 }
