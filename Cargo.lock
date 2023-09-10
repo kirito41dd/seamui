@@ -2772,7 +2772,7 @@ dependencies = [
 [[package]]
 name = "seam_core"
 version = "0.1.20"
-source = "git+https://github.com/Borber/seam?branch=master#76c1e1d798fba163aadb53b22566f0703dde9ed8"
+source = "git+https://github.com/Borber/seam?rev=881ec7dafb0f5b8ce146294925d3050687f3fc17#881ec7dafb0f5b8ce146294925d3050687f3fc17"
 dependencies = [
  "async-trait",
  "base64",
@@ -2796,7 +2796,7 @@ dependencies = [
 [[package]]
 name = "seam_marcos"
 version = "0.1.0"
-source = "git+https://github.com/Borber/seam?branch=master#76c1e1d798fba163aadb53b22566f0703dde9ed8"
+source = "git+https://github.com/Borber/seam?rev=881ec7dafb0f5b8ce146294925d3050687f3fc17#881ec7dafb0f5b8ce146294925d3050687f3fc17"
 dependencies = [
  "proc-macro2",
  "quote",

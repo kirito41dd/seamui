@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-seam_core = { git = "https://github.com/Borber/seam", branch = "master" }
+seam_core = { git = "https://github.com/Borber/seam", rev = "881ec7dafb0f5b8ce146294925d3050687f3fc17" }
 anyhow = "1.0.70"
 directories-next = "2.0.0"
 env_logger = "0.10.0"
