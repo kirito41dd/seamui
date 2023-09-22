@@ -1,0 +1,41 @@
+import { Button, VerticalBox , ScrollView, HorizontalBox, GridBox, ListView, TabWidget} from "std-widgets.slint";
+import { LiveCard } from "live_card.slint";
+import { Home } from "home.slint";
+import { Follow } from "follow.slint";
+import { g_model } from "gmodel.slint";
+
+export { g_model }
+
+export component AppWindow inherits Window {
+    preferred-width: 800px;
+    preferred-height: 450px;
+    width: 870px;
+    min-height: 500px;
+
+    title: "SeamUI";
+    icon: @image-url("../static//logo(1).ico");
+    
+    
+    in-out property<int> counter: 42;
+    callback request-increase-value();
+
+    HorizontalLayout {
+        TabWidget { 
+            Tab {
+                title: "主页";
+                Home {  }
+            }
+            Tab {
+                title: "订阅";
+                Follow {  }
+            }
+            Tab {
+                title: "设置";
+                
+                
+            }
+         }
+    }
+    
+   
+}

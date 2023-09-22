@@ -1,0 +1,31 @@
+
+export struct LiveCardInfo {
+    anchor: string,
+    title: string,
+    cover:  image,
+    avatar: image,
+    urls: [string],
+}
+
+export global g_model {
+    in-out property <[[LiveCardInfo]]> card_rows;
+    // in-out property <[[LiveCardInfo]]> card_rows :[[{
+    //     anchor:"123", 
+    //     title:"世界第一直播间",
+    //     cover: @image-url("E:/download/firefox/1f4cc214bd4f7f032c42447b860944db970e0243.jpg"),
+    //     avatar: @image-url("E:/download/firefox/544c89e68f2b1f12ffcbb8b3c062a3328e8692d9.jpg")
+    // },{
+    //     anchor:"123", 
+    //     title:"世界第一直播间",
+    //     cover: @image-url("E:/download/firefox/1f4cc214bd4f7f032c42447b860944db970e0243.jpg"),
+    //     avatar: @image-url("E:/download/firefox/544c89e68f2b1f12ffcbb8b3c062a3328e8692d9.jpg")
+    // },{
+    //     anchor:"123", 
+    //     title:"世界第一直播间",
+    //     cover: @image-url("E:/download/firefox/1f4cc214bd4f7f032c42447b860944db970e0243.jpg"),
+    //     avatar: @image-url("E:/download/firefox/544c89e68f2b1f12ffcbb8b3c062a3328e8692d9.jpg")
+    // }]];
+    callback follow(string,string);
+    callback want_play(LiveCardInfo);
+}
+

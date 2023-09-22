@@ -1,0 +1,53 @@
+
+
+import { ComboBox , HorizontalBox, VerticalBox} from "std-widgets.slint";
+import { g_model } from "gmodel.slint";
+
+
+export component Search inherits VerticalBox {
+    property <[image]> logos : [
+        @image-url("../static/bili-logo.png"),
+        @image-url("../static/douyu-logo.png"),
+        @image-url("../static/huya-logo.png"),
+        @image-url("../static/douyin-logo.png"),
+    ];
+    callback search(string,string);
+    alignment: start;
+    HorizontalBox {
+        alignment: center;
+        Rectangle {
+            clip: true;
+            border-radius: 32px;
+            width: logo.width;
+            height: logo.height;
+            logo := Image {
+                width: 128px;
+                height: 128px;
+                source: logos[combo.current-index];
+            }
+        }
+    }
+    HorizontalBox { 
+        alignment: center;
+        combo := ComboBox { 
+            height: 30px;
+            width: 100px;
+            model: ["bilibili","douyu","huya","douyin"];
+        } 
+        Rectangle {
+            border-width: 2px;
+            border-color: grey;
+            border-radius: 5px;
+            HorizontalBox {
+                TextInput {
+                    width: 300px;
+                    accepted => {
+                        g-model.follow(combo.current-value,self.text);
+                    }
+                }
+            }
+        }
+        
+     }
+    
+}

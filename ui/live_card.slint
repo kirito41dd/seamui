@@ -1,0 +1,69 @@
+import { VerticalBox , HorizontalBox, Button} from "std-widgets.slint";
+import {LiveCardInfo} from "gmodel.slint";
+
+export  component LiveCard inherits Rectangle  {
+    width: cover.min-width;
+    height: cover.min-height + 50px + 2px;
+    border-radius: 5px;
+    states [
+        press when touch.pressed: {
+            background: #968d8d;
+            body.x: 1px;
+            body.y: 1px;
+        }
+        hover when touch.has-hover: {
+            background: #f1f2f3;
+            //title.color: #00aeec;
+        }
+    ]
+    touch := TouchArea{clicked => {root.on-click(root.info)}}
+    in-out property <LiveCardInfo> info : {
+        anchor:"123", 
+        title:"世界第一直播间",
+        cover: @image-url("E:/download/firefox/1f4cc214bd4f7f032c42447b860944db970e0243.jpg"),
+        avatar: @image-url("E:/download/firefox/544c89e68f2b1f12ffcbb8b3c062a3328e8692d9.jpg")
+    };
+    callback on_click(LiveCardInfo);
+    body:=VerticalBox {
+        padding: 0px;
+        spacing: 1px;
+        alignment: start;
+        HorizontalBox{
+            padding: 0;
+            alignment: start;
+            cover:=Rectangle {
+                clip: true;
+                border-radius: 5px;
+                Image {
+                    preferred-width: 262.6px;
+                    preferred-height: 147.7px;
+                    min-width: 262.6px;
+                    min-height: 147.7px;
+                    source:info.cover;
+                }
+            }
+        }
+        HorizontalBox {
+            padding: 0px;
+            spacing: 0px;
+            alignment: start;
+            Rectangle {
+                clip: true;
+                border-radius: self.width;
+                Image {
+                    preferred-width: 50px;
+                    preferred-height: 50px;
+                    min-width: 50px;
+                    min-height: 50px;
+                    source: info.avatar;
+                }
+            }
+            VerticalBox {
+                padding: 5px;
+                spacing: 0;
+                title := Text {text: {info.title};}
+                Text {text:{info.anchor}; color: #2f3336;}
+            }
+        }
+    }
+}

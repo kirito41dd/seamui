@@ -1,0 +1,23 @@
+
+import { ListView , VerticalBox, ScrollView, HorizontalBox} from "std-widgets.slint";
+import { LiveCard } from "live_card.slint";
+import { LiveCardInfo, g_model} from "gmodel.slint";
+
+
+
+
+export  component Home inherits VerticalBox  {
+    ScrollView    {
+
+        VerticalBox {
+            for row in g_model.card-rows : HorizontalBox{ // 多少列
+                for i in row : LiveCard   { // 一列固定3行
+                    info: i;
+                    on-click(v) => {g-model.want-play(v);}
+                }
+            }
+        }
+
+        
+    }
+}
