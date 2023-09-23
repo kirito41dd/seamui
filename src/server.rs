@@ -201,7 +201,7 @@ impl AnchorMgr {
 
     // 加载配置
     pub async fn load_config(&mut self) -> anyhow::Result<()> {
-        let anchors = config::load_anchor().await?;
+        let anchors = config::load_anchor().await.unwrap_or_default();
         info!("load {} from config", anchors.len());
         for anchor in anchors {
             self.config_map.insert(Self::key(&anchor), anchor); // 初始化配置
